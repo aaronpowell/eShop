@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Pgvector.EntityFrameworkCore;
 
 namespace eShop.Catalog.API;
 
@@ -131,35 +130,17 @@ public static class CatalogApi
             return await GetItemsByName(paginationRequest, services, text);
         }
 
-        // Create an embedding for the input search
-        var vector = await services.CatalogAI.GetEmbeddingAsync(text);
+        List<CatalogItem> itemsOnPage = [];
 
         // Get the total number of items
         var totalItems = await services.Context.CatalogItems
             .LongCountAsync();
+        var itemsWithDistance = services.CatalogAI.SearchMemoryAsync(text, pageSize);
 
-        // Get the next page of items, ordered by most similar (smallest distance) to the input search
-        List<CatalogItem> itemsOnPage;
-        if (services.Logger.IsEnabled(LogLevel.Debug))
+        await foreach (var item in itemsWithDistance)
         {
-            var itemsWithDistance = await services.Context.CatalogItems
-                .Select(c => new { Item = c, Distance = c.Embedding.CosineDistance(vector) })
-                .OrderBy(c => c.Distance)
-                .Skip(pageSize * pageIndex)
-                .Take(pageSize)
-                .ToListAsync();
-
-            services.Logger.LogDebug("Results from {text}: {results}", text, string.Join(", ", itemsWithDistance.Select(i => $"{i.Item.Name} => {i.Distance}")));
-
-            itemsOnPage = itemsWithDistance.Select(i => i.Item).ToList();
-        }
-        else
-        {
-            itemsOnPage = await services.Context.CatalogItems
-                .OrderBy(c => c.Embedding.CosineDistance(vector))
-                .Skip(pageSize * pageIndex)
-                .Take(pageSize)
-                .ToListAsync();
+            var catalogItem = await services.Context.CatalogItems.FindAsync(int.Parse(item.Metadata.Id));
+            itemsOnPage.Add(catalogItem);
         }
 
         return TypedResults.Ok(new PaginatedItems<CatalogItem>(pageIndex, pageSize, totalItems, itemsOnPage));
@@ -233,7 +214,7 @@ public static class CatalogApi
         var catalogEntry = services.Context.Entry(catalogItem);
         catalogEntry.CurrentValues.SetValues(productToUpdate);
 
-        catalogItem.Embedding = await services.CatalogAI.GetEmbeddingAsync(catalogItem);
+        await services.CatalogAI.SaveToMemoryAsync(catalogItem);
 
         var priceEntry = catalogEntry.Property(i => i.Price);
 
@@ -272,10 +253,10 @@ public static class CatalogApi
             RestockThreshold = product.RestockThreshold,
             MaxStockThreshold = product.MaxStockThreshold
         };
-        item.Embedding = await services.CatalogAI.GetEmbeddingAsync(item);
 
         services.Context.CatalogItems.Add(item);
         await services.Context.SaveChangesAsync();
+        await services.CatalogAI.SaveToMemoryAsync(item);
 
         return TypedResults.Created($"/api/catalog/items/{item.Id}");
     }

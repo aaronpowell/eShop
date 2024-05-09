@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using eShop.Catalog.API.Services;
-using Pgvector;
 
 namespace eShop.Catalog.API.Infrastructure;
 
@@ -57,11 +56,10 @@ public partial class CatalogContextSeed(
 
             if (catalogAI.IsEnabled)
             {
-                logger.LogInformation("Generating {NumItems} embeddings", catalogItems.Length);
-                IReadOnlyList<Vector> embeddings = await catalogAI.GetEmbeddingsAsync(catalogItems);
-                for (int i = 0; i < catalogItems.Length; i++)
+                foreach (var catalogItem in catalogItems)
                 {
-                    catalogItems[i].Embedding = embeddings[i];
+                    var id = await catalogAI.SaveToMemoryAsync(catalogItem);
+                    logger.LogInformation("Created memory record for Catalog item with Id {Id}", id);
                 }
             }
 

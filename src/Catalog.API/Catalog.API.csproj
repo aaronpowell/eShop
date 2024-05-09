@@ -23,10 +23,12 @@
   <!-- AI -->
   <ItemGroup>
     <PackageReference Include="Aspire.Azure.AI.OpenAI" />
+    <PackageReference Include="Aspire.Npgsql" />
     <PackageReference Include="Microsoft.SemanticKernel" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.Onnx" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Postgres" />
+    <PackageReference Include="Microsoft.SemanticKernel.Plugins.Memory" />
     <PackageReference Include="Pgvector" />
-    <PackageReference Include="Pgvector.EntityFrameworkCore" />
   </ItemGroup>
 
   <ItemGroup>
