@@ -33,7 +33,9 @@ public static class Extensions
         else if (!string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("openai")))
         {
             builder.AddAzureOpenAIClient("openai");
-            builder.Services.AddOpenAITextEmbeddingGeneration(builder.Configuration["AIOptions:OpenAI:EmbeddingName"] ?? "text-embedding-3-small");
+            builder.Services.AddAzureOpenAITextEmbeddingGeneration(
+                builder.Configuration["AIOptions:OpenAI:EmbeddingName"] ?? "text-embedding-3-small",
+                dimensions: CatalogAI.EmbeddingDimensions);
             builder.RegisterVectorDb();
         }
 

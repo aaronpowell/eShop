@@ -22,5 +22,5 @@ public sealed class CatalogAI(
 
     /// <inheritdoc/>
     public IAsyncEnumerable<MemoryQueryResult> SearchMemoryAsync(string query, int pageSize) =>
-        IsEnabled ? memory.SearchAsync(MemoryCollection, query, pageSize) : throw new InvalidOperationException("Search can't be performed when AI is disabled");
+        IsEnabled ? memory.SearchAsync(MemoryCollection, query, pageSize, minRelevanceScore: 0.5) : throw new InvalidOperationException("Search can't be performed when AI is disabled");
 }
