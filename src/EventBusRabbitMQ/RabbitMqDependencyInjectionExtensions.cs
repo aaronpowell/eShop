@@ -29,6 +29,12 @@ public static class RabbitMqDependencyInjectionExtensions
             return factory;
         });
 
+        builder.Services.AddSingleton<IConnection>(sp =>
+        {
+            var factory = sp.GetRequiredService<IConnectionFactory>();
+            return factory.CreateConnection();
+        });
+
         // Options support
         builder.Services.Configure<EventBusOptions>(builder.Configuration.GetSection(SectionName));
 

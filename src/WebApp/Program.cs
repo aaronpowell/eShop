@@ -1,5 +1,6 @@
-﻿using eShop.WebApp.Components;
-using eShop.ServiceDefaults;
+﻿using eShop.ServiceDefaults;
+using eShop.WebApp.Components;
+using static OllamaSharp.OllamaApiClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,6 @@ app.UseStaticFiles();
 
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-app.MapForwarder("/product-images/{id}", "http://catalog-api", "/api/catalog/items/{id}/pic");
+app.MapForwarder("/product-images/{id}", app.Configuration.GetRequiredValue("Endpoints:Catalog"), "/api/catalog/items/{id}/pic");
 
 app.Run();

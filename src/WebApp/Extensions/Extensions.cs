@@ -18,7 +18,7 @@ public static class Extensions
         builder.AddRabbitMqEventBus("EventBus")
                .AddEventBusSubscriptions();
 
-        builder.Services.AddHttpForwarderWithServiceDiscovery();
+        builder.Services.AddHttpForwarder();
 
         // Application services
         builder.Services.AddScoped<BasketState>();
@@ -101,7 +101,8 @@ public static class Extensions
             var ollama = new OllamaApiClient(builder.Configuration["Ollama:Endpoint"]!, builder.Configuration["Ollama:ChatModel"]!);
 
             return new ChatClientBuilder(ollama)
-                .UseFunctionInvocation();
+                .UseFunctionInvocation()
+                .Build();
         });
     }
 
