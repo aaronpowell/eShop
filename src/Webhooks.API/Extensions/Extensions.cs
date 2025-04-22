@@ -7,7 +7,9 @@
         builder.AddRabbitMqEventBus("eventbus")
                .AddEventBusSubscriptions();
 
-        builder.AddNpgsqlDbContext<WebhooksContext>("webhooksdb");
+        builder.Services.AddDbContextPool<WebhooksContext>(options => {
+            options.UseNpgsql(builder.Configuration.GetConnectionString("webhooksdb"));
+        });
 
         builder.Services.AddMigration<WebhooksContext>();
 
