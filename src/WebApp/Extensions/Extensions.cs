@@ -1,5 +1,4 @@
 ﻿using eShop.Basket.API.Grpc;
-using eShop.WebApp;
 using eShop.WebApp.Services.OrderStatus.IntegrationEvents;
 using eShop.WebAppComponents.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -9,7 +8,6 @@ using Microsoft.AspNetCore.Components.Server;
 using Microsoft.Extensions.AI;
 using Microsoft.IdentityModel.JsonWebTokens;
 using OllamaSharp;
-using OpenAI;
 
 public static class Extensions
 {
@@ -30,15 +28,17 @@ public static class Extensions
         builder.Services.AddSingleton<IProductImageUrlProvider, ProductImageUrlProvider>();
         builder.AddAIServices();
 
+        var configuration = builder.Configuration;
+
         // HTTP and GRPC client registrations
-        builder.Services.AddGrpcClient<Basket.BasketClient>(o => o.Address = new("http://basket-api"))
+        builder.Services.AddGrpcClient<Basket.BasketClient>(o => o.Address = new(configuration.GetRequiredValue("Endpoints:Basket")))
             .AddAuthToken();
 
-        builder.Services.AddHttpClient<CatalogService>(o => o.BaseAddress = new("http://catalog-api"))
+        builder.Services.AddHttpClient<CatalogService>(o => o.BaseAddress = new(configuration.GetRequiredValue("Endpoints:Catalog")))
             .AddApiVersion(2.0)
             .AddAuthToken();
 
-        builder.Services.AddHttpClient<OrderingService>(o => o.BaseAddress = new("http://ordering-api"))
+        builder.Services.AddHttpClient<OrderingService>(o => o.BaseAddress = new(configuration.GetRequiredValue("Endpoints:Ordering")))
             .AddApiVersion(1.0)
             .AddAuthToken();
     }
@@ -96,19 +96,13 @@ public static class Extensions
 
     private static void AddAIServices(this IHostApplicationBuilder builder)
     {
-        ChatClientBuilder? chatClientBuilder = null;
-        if (builder.Configuration["OllamaEnabled"] is string ollamaEnabled && bool.Parse(ollamaEnabled))
+        builder.Services.AddSingleton(_ =>
         {
-            chatClientBuilder = builder.AddOllamaApiClient("chat")
-                .AddChatClient();
-        }
-        else if (!string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("chatModel")))
-        {
-            chatClientBuilder = builder.AddOpenAIClientFromConfiguration("chatModel")
-                .AddChatClient();
-        }
+            var ollama = new OllamaApiClient(builder.Configuration["Ollama:Endpoint"]!, builder.Configuration["Ollama:ChatModel"]!);
 
-        chatClientBuilder?.UseFunctionInvocation();
+            return new ChatClientBuilder(ollama)
+                .UseFunctionInvocation();
+        });
     }
 
     public static async Task<string?> GetBuyerIdAsync(this AuthenticationStateProvider authenticationStateProvider)
