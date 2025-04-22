@@ -1,7 +1,5 @@
 ﻿var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
-
 builder.Services.AddControllersWithViews();
 
 builder.AddNpgsqlDbContext<ApplicationDbContext>("identitydb");
@@ -41,8 +39,6 @@ builder.Services.AddTransient<ILoginService<ApplicationUser>, EFLoginService>();
 builder.Services.AddTransient<IRedirectService, RedirectService>();
 
 var app = builder.Build();
-
-app.MapDefaultEndpoints();
 
 app.UseStaticFiles();
 
