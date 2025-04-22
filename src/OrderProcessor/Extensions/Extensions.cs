@@ -10,7 +10,7 @@ public static class Extensions
         builder.AddRabbitMqEventBus("eventbus")
                .ConfigureJsonOptions(options => options.TypeInfoResolverChain.Add(IntegrationEventContext.Default));
 
-        builder.AddNpgsqlDataSource("orderingdb");
+        builder.Services.AddNpgsqlDataSource(builder.Configuration.GetConnectionString("orderingdb"));
 
         builder.Services.AddOptions<BackgroundTaskOptions>()
             .BindConfiguration(nameof(BackgroundTaskOptions));

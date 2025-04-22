@@ -112,7 +112,7 @@
     <PackageVersion Include="StackExchange.Redis" Version="2.8.31" />
     <PackageVersion Include="RabbitMQ.Client" Version="6.8.1" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(MicrosoftExtensionsVersion)" />
-    <PackageVersion Include="Npgsql.DependencyInjection" Version="9.0.4" />
+    <PackageVersion Include="Npgsql.DependencyInjection" Version="9.0.3" />
     <PackageVersion Include="OllamaSharp" Version="5.1.13" />
   </ItemGroup>
 </Project>
