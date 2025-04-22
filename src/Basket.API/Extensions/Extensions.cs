@@ -11,7 +11,12 @@ public static class Extensions
     {
         builder.AddDefaultAuthentication();
 
-        builder.AddRedisClient("redis");
+        builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var redisConnectionString = configuration.GetConnectionString("Redis");
+            return ConnectionMultiplexer.Connect(redisConnectionString);
+        });
 
         builder.Services.AddSingleton<IBasketRepository, RedisBasketRepository>();
 
