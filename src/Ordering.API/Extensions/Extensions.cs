@@ -14,7 +14,6 @@
         {
             options.UseNpgsql(builder.Configuration.GetConnectionString("orderingdb"));
         });
-        builder.EnrichNpgsqlDbContext<OrderingContext>();
 
         services.AddMigration<OrderingContext, OrderingContextSeed>();
 
