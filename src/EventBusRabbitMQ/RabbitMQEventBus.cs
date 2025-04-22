@@ -6,8 +6,6 @@ using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using OpenTelemetry;
-using OpenTelemetry.Context.Propagation;
 using Polly.Retry;
 
 public sealed class RabbitMQEventBus(
@@ -20,7 +18,6 @@ public sealed class RabbitMQEventBus(
     private const string ExchangeName = "eshop_event_bus";
 
     private readonly ResiliencePipeline _pipeline = CreateResiliencePipeline(options.Value.RetryCount);
-    private readonly TextMapPropagator _propagator = rabbitMQTelemetry.Propagator;
     private readonly ActivitySource _activitySource = rabbitMQTelemetry.ActivitySource;
     private readonly string _queueName = options.Value.SubscriptionClientName;
     private readonly EventBusSubscriptionInfo _subscriptionInfo = subscriptionOptions.Value;
@@ -74,14 +71,6 @@ public sealed class RabbitMQEventBus(
             // persistent
             properties.DeliveryMode = 2;
 
-            static void InjectTraceContextIntoBasicProperties(IBasicProperties props, string key, string value)
-            {
-                props.Headers ??= new Dictionary<string, object>();
-                props.Headers[key] = value;
-            }
-
-            _propagator.Inject(new PropagationContext(contextToInject, Baggage.Current), properties, InjectTraceContextIntoBasicProperties);
-
             SetActivityContext(activity, routingKey, "publish");
 
             if (logger.IsEnabled(LogLevel.Trace))
@@ -130,25 +119,11 @@ public sealed class RabbitMQEventBus(
 
     private async Task OnMessageReceived(object sender, BasicDeliverEventArgs eventArgs)
     {
-        static IEnumerable<string> ExtractTraceContextFromBasicProperties(IBasicProperties props, string key)
-        {
-            if (props.Headers.TryGetValue(key, out var value))
-            {
-                var bytes = value as byte[];
-                return [Encoding.UTF8.GetString(bytes)];
-            }
-            return [];
-        }
-
-        // Extract the PropagationContext of the upstream parent from the message headers.
-        var parentContext = _propagator.Extract(default, eventArgs.BasicProperties, ExtractTraceContextFromBasicProperties);
-        Baggage.Current = parentContext.Baggage;
-
         // Start an activity with a name following the semantic convention of the OpenTelemetry messaging specification.
         // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md
         var activityName = $"{eventArgs.RoutingKey} receive";
 
-        using var activity = _activitySource.StartActivity(activityName, ActivityKind.Client, parentContext.ActivityContext);
+        using var activity = _activitySource.StartActivity(activityName, ActivityKind.Client);
 
         SetActivityContext(activity, eventArgs.RoutingKey, "receive");
 
