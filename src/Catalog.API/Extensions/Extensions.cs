@@ -1,7 +1,6 @@
 ﻿using eShop.Catalog.API.Services;
 using Microsoft.Extensions.AI;
 using OllamaSharp;
-using OpenAI;
 
 public static class Extensions
 {
@@ -15,9 +14,11 @@ public static class Extensions
             return;
         }
 
-        builder.AddNpgsqlDbContext<CatalogContext>("catalogdb", configureDbContextOptions: dbContextOptionsBuilder =>
+        builder.Services.AddDbContextPool<CatalogContext>(dbContextOptionsBuilder =>
         {
-            dbContextOptionsBuilder.UseNpgsql(builder =>
+            var connectionString = builder.Configuration.GetConnectionString("CatalogDb");
+
+            dbContextOptionsBuilder.UseNpgsql(connectionString, builder =>
             {
                 builder.UseVector();
             });
@@ -38,16 +39,11 @@ public static class Extensions
         builder.Services.AddOptions<CatalogOptions>()
             .BindConfiguration(nameof(CatalogOptions));
 
-        if (builder.Configuration["OllamaEnabled"] is string ollamaEnabled && bool.Parse(ollamaEnabled))
+        builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(_ =>
         {
-            builder.AddOllamaApiClient("embedding")
-                .AddEmbeddingGenerator();
-        }
-        else if (!string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("textEmbeddingModel")))
-        {
-            builder.AddOpenAIClientFromConfiguration("textEmbeddingModel")
-                .AddEmbeddingGenerator();
-        }
+            var ollama = new OllamaApiClient(builder.Configuration["Ollama:Endpoint"], builder.Configuration["Ollama:EmbeddingModel"]);
+            return ollama;
+        });
 
         builder.Services.AddScoped<ICatalogAI, CatalogAI>();
     }
