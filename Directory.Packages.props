@@ -5,8 +5,8 @@
     <AspnetVersion>9.0.4</AspnetVersion>
     <MicrosoftExtensionsVersion>9.0.4</MicrosoftExtensionsVersion>
     <MicrosoftExtensionsAIVersion>9.4.0-preview.1.25207.5</MicrosoftExtensionsAIVersion>
-    <AspireVersion>9.2.0</AspireVersion>
-    <AspireUnstablePackagesVersion>9.2.0-preview.1.25209.2</AspireUnstablePackagesVersion>
+    <AspireVersion>9.2.1</AspireVersion>
+    <AspireUnstablePackagesVersion>9.2.1-preview.1.25222.1</AspireUnstablePackagesVersion>
     <GrpcVersion>2.70.0</GrpcVersion>
     <DuendeVersion>7.1.1</DuendeVersion>
     <ApiVersioningVersion>8.1.0</ApiVersioningVersion>
