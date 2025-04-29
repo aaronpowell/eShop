@@ -1,5 +1,5 @@
 ﻿var builder = WebApplication.CreateBuilder(args);
-
+builder.AddServiceDefaults();
 builder.AddApplicationServices();
 
 var withApiVersioning = builder.Services.AddApiVersioning();
